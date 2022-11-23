@@ -6,3 +6,4 @@ emoji~=1.6.3
 nltk
 speechrecognition
 pyaudio
+geocoder

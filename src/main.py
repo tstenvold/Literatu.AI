@@ -1,8 +1,15 @@
 import pyttsx3
 import speech_recognition as sr
 import emotion_text
+import geocoder
 
 recognizer = sr.Recognizer()
+
+
+def get_location() -> str:
+    g_loc = geocoder.ip('me')
+    print(f"Current city is {g_loc.city}")
+    return g_loc
 
 
 def say_text(text: str):
@@ -32,6 +39,7 @@ def get_voice_input() -> str:
 
 def main():
 
+    location = get_location()
     say_text("Welcome! to the Literature A I app.")
     say_text("How are you feeling today?")
 
