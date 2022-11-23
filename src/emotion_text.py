@@ -8,6 +8,9 @@ def process_text(text: str) -> dict:
     return emotion
 
 
+def get_top_emotion(emotion_dict: dict) -> str:
+    return max(emotion_dict, key=emotion_dict.get)
+
 if __name__ == "__main__":
     text = "I am so happy that you are here."
     analysis = process_text(text)

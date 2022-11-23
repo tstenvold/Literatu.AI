@@ -4,3 +4,5 @@ opencv-python
 text2emotion
 emoji~=1.6.3
 nltk
+speechrecognition
+pyaudio
