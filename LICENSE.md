@@ -1,4 +1,6 @@
-Copyright (c) 2012-2022 Magda Gunka, David Neubauer, Lydia Kondylidou,
+MIT License
+
+Copyright (c) 2022 Magda Gunka, David Neubauer, Lydia Kondylidou,
 Terence Stenvold and Maximilian Vogel
 
 Permission is hereby granted, free of charge, to any person obtaining
