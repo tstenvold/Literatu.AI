@@ -1,3 +1,6 @@
 pyttsx3
 fer
 opencv-python
+text2emotion
+emoji~=1.6.3
+nltk
