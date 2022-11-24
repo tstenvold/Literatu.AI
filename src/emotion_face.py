@@ -14,28 +14,27 @@ def random_string(length: int) -> list:
     return ''.join(random.choice(letters) for i in range(length))
 
 
-def get_image() -> str:
-    cap = cv2.VideoCapture(0)
-    cap.set(3, 320)
-    cap.set(4, 240)
+def get_image(cap):
 
     while True:
-        time.sleep(0.1)
+        time.sleep(0.25)
         _, frame = cap.read()
         if frame is not None:
-            cap.release()
             return frame
 
 
 def process_frame(frame) -> dict:
     emotion_detector = FER(mtcnn=True)
-    analysis = emotion_detector.detect_emotions(frame)
-    result = {}
-    if analysis.__len__() != 0:
-        analysis = analysis.pop()
-        result = analysis.get('emotions')
+    try:
+        analysis = emotion_detector.detect_emotions(frame)
+        result = {}
+        if analysis.__len__() != 0:
+            analysis = analysis.pop()
+            result = analysis.get('emotions')
 
-    return result
+        return result
+    except Exception as e:
+        return {}
 
 
 def get_num_images(num_image: int, interval: int = 100) -> None:
@@ -76,14 +75,18 @@ def get_top_emotion(emotion_dict: dict) -> str:
 def stream_process_image(event: threading.Event) -> None:
     results = []
     count = 0
+    cap = cv2.VideoCapture(0)
+    cap.set(3, 320)
+    cap.set(4, 240)
 
     while not event.is_set():
-        frame = get_image()
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(process_frame, frame)
+            future = executor.submit(process_frame, get_image(cap))
             results.append(future.result())
         count += 1
         time.sleep(0.1)
+
+    cap.release()
 
     final_analysis = combine_queued_results(results)
     return final_analysis

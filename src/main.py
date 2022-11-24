@@ -59,7 +59,8 @@ def main():
         face = future.result()
 
     voice = emotion_text.process_text(text)
-    
+
+    print(f"Understood input: {text}")
     print(f"Voice: {voice}")
     print(f"Face: {face}")
 
