@@ -47,7 +47,6 @@ def main():
 
     recognizer = sr.Recognizer()
     face_event = threading.Event()
-    text = ""
     face = {}
     chat = Chat()
     chat.start_new_session(1)
@@ -60,6 +59,7 @@ def main():
         say_text(first_q)
 
         while True:
+            face_event.clear()
             face_future = executor.submit(
                 emotion_face.stream_process_image, face_event)
             text = get_voice_input(recognizer)

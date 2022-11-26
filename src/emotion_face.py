@@ -17,9 +17,9 @@ def random_string(length: int) -> list:
 def get_image(cap):
 
     while True:
-        time.sleep(0.25)
+        time.sleep(0.1)
         _, frame = cap.read()
-        if frame is not None:
+        if frame is not None and frame.any():
             return frame
 
 
