@@ -32,6 +32,8 @@ def unify_results(analysis: dict) -> dict:
 def get_top_emotion(emotion_dict: dict) -> str:
     if emotion_dict == {}:
         return "None"
+    elif emotion_dict["happy"] == emotion_dict["angry"] == emotion_dict["surprise"] == emotion_dict["sad"] == emotion_dict["fear"] == emotion_dict["neutral"] == emotion_dict["disgust"]:
+        return "None"
     else:
         return max(emotion_dict, key=emotion_dict.get)
 

@@ -31,7 +31,6 @@ def process_frame(frame) -> dict:
         if analysis.__len__() != 0:
             analysis = analysis.pop()
             result = analysis.get('emotions')
-
         return result
     except Exception as e:
         return {}
@@ -68,6 +67,8 @@ def process_image(image_path: str) -> dict:
 def get_top_emotion(emotion_dict: dict) -> str:
     if emotion_dict == {}:
         return "None"
+    elif emotion_dict["happy"] == emotion_dict["angry"] == emotion_dict["surprise"] == emotion_dict["sad"] == emotion_dict["fear"] == emotion_dict["neutral"] == emotion_dict["disgust"]:
+        return "None"
     else:
         return max(emotion_dict, key=emotion_dict.get)
 
@@ -80,11 +81,10 @@ def stream_process_image(event: threading.Event) -> None:
     cap.set(4, 240)
 
     while not event.is_set():
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(process_frame, get_image(cap))
-            results.append(future.result())
+        results.append(process_frame(get_image(cap)))
         count += 1
-        time.sleep(0.1)
+        if count >= 5:
+            break
 
     cap.release()
 
@@ -104,31 +104,3 @@ def combine_queued_results(results) -> dict:
 
     final_analysis = {k: v / count for k, v in analysis.items()}
     return final_analysis
-
-
-def determine_emotion() -> dict:
-
-    analysis = {}
-    num_images = 5
-
-    get_num_images(num_images)
-
-    for i in range(5):
-        if analysis == {}:
-            analysis = process_image(f"assets/images/cam_emo_{i}.png")
-        else:
-            dict(Counter(analysis) +
-                 Counter(process_image(f"assets/images/cam_emo_{i}.png")))
-
-    final_analysis = {k: v / num_images for k, v in analysis.items()}
-    print(f"Analysis: {final_analysis}")
-    return final_analysis
-
-
-if __name__ == "__main__":
-    sample = process_image("assets/images/sample_image.png")
-    print(f"Sample Image Analysis: {sample}")
-    print(f"Top Emotion: {get_top_emotion(sample)}")
-
-    emotion_dict = determine_emotion()
-    print(f"Top Emotion: {get_top_emotion(emotion_dict)}")

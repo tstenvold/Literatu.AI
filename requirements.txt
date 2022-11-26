@@ -7,3 +7,4 @@ nltk
 speechrecognition
 pyaudio
 geocoder
+chatbotAI
