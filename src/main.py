@@ -6,8 +6,7 @@ import pyttsx3
 import time
 import threading
 import concurrent.futures
-import os
-from chatbot import Chat
+from chatbot import chatbot
 
 
 def get_location() -> str:
@@ -48,38 +47,35 @@ def main():
     recognizer = sr.Recognizer()
     face_event = threading.Event()
     face = {}
-    chat = Chat()
-    chat.start_new_session(1)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.submit(get_location)
+        loc_future = executor.submit(get_location)
         # say_text("Welcome! to the Literature A I app.")
-        first_q = "How are you feeling today?"
-        chat._conversation[1].append(first_q)
+        first_q = "Hi! How are you feeling today?"
+        cb = chatbot(previous_dialog=[f"{first_q}", ])
         say_text(first_q)
+        city = loc_future.result().city
 
         while True:
             face_event.clear()
             face_future = executor.submit(
                 emotion_face.stream_process_image, face_event)
+
             text = get_voice_input(recognizer)
             face_event.set()
-            face = face_future.result()
 
+            face = face_future.result()
             voice = emotion_text.process_text(text)
-            chat._conversation[1].append(text)
 
             print(f"Voice: {voice}")
             print(f"Face: {face}")
-
             voice_emotion = emotion_text.get_top_emotion(voice)
             face_emotion = emotion_face.get_top_emotion(face)
 
+            response = cb.generate_response("", text)
+
             print(f"Voice Emotion: {voice_emotion}")
             print(f"Face Emotion: {face_emotion}")
-
-            response = chat.respond(text, 1)
-            chat._conversation[1].append(response)
 
             print(f"You said: {text}")
             print(f"Bot says: {response}")
