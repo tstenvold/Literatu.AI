@@ -7,9 +7,4 @@ nltk
 speechrecognition
 pyaudio
 geocoder
-chatbotAI
 transformers
-flax
-torch 
-torchvision
-tensorflow~=2.9.0
