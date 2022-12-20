@@ -80,8 +80,9 @@ def main():
 
             else:
                 text = get_voice_input(recognizer)
-                chat.user_response(text)
-                response = chat.get_response()
+
+            chat.user_response(text)
+            response = chat.get_response()
 
             print(f"You said: {text}")
             print(f"Bot says: {response}")

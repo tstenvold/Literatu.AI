@@ -62,14 +62,15 @@ class chatbot:
             'context': input
         }
         res = self.nlp(QA_input)
-        print(res)
-        if res['score'] < 0.5:
+        if res['score'] < 0.01:
             return None
         return res
 
     def user_response(self, text) -> bool:
         questions = {'genre': 'What is the genre mentioned?',
                      'author': 'Who is the book author mentioned?', 'book': 'What is the book mentioned?'}
+        print(f'last state: {self.last_state}')
+        print(f'state: {self.state}')
         if self.last_state not in questions.keys():
             return False
 
@@ -77,6 +78,7 @@ class chatbot:
         if result == None:
             return False
 
+        print(f"result: {result}")
         if self.last_state == 'genre':
             self.genre = result['answer']
         elif self.last_state == 'author':
