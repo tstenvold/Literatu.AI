@@ -2,12 +2,20 @@ import json
 from pathlib import Path
 import random
 import string
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+
+model_name = "deepset/roberta-base-squad2"
 
 
 class chatbot:
 
     def __init__(self, knowledge_json=None) -> None:
         self.state = 'greeting'
+        self.last_state = None
+
+        self.nlp = pipeline('question-answering',
+                            model=model_name, tokenizer=model_name)
+
         self.mood = None
         self.genre = None
         self.author = None
@@ -46,6 +54,39 @@ class chatbot:
         self.location = location
         self.update_responses()
 
+    def get_answer(self, input, question) -> dict:
+        if input == None or input == '':
+            return None
+        QA_input = {
+            'question': question,
+            'context': input
+        }
+        res = self.nlp(QA_input)
+        print(res)
+        if res['score'] < 0.5:
+            return None
+        return res
+
+    def user_response(self, text) -> bool:
+        questions = {'genre': 'What is the genre mentioned?',
+                     'author': 'Who is the book author mentioned?', 'book': 'What is the book mentioned?'}
+        if self.last_state not in questions.keys():
+            return False
+
+        result = self.get_answer(text, questions[self.last_state])
+        if result == None:
+            return False
+
+        if self.last_state == 'genre':
+            self.genre = result['answer']
+        elif self.last_state == 'author':
+            self.author = result['answer']
+        elif self.last_state == 'book':
+            self.book = result['answer']
+
+        self.update_responses()
+        return True
+
     def _choose_option(self) -> str:
         options = ['genre', 'author', 'book', 'location']
         if self.genre != None:
@@ -57,7 +98,8 @@ class chatbot:
 
         self.state = random.choice(options)
 
-    def get_response(self) -> str:
+    def get_response(self, user_reaction: bool = False) -> str:
+        self.last_state = self.state
         response = self.select_response()
         if self.state == 'greeting':
             self.state = 'mood'
