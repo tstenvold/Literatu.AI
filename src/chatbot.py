@@ -162,5 +162,29 @@ class chatbot:
         with open(knowledge_json, 'w') as f:
             json.dump(self.knowledge, f)
 
+    def _get_previous(self, key) -> list:
+        previous = []
+        for id, knowledge in self.knowledge.items():
+            previous.append(knowledge[key])
+        return previous
+
+    def get_previous_authors(self) -> list:
+        return self._get_previous('author')
+
+    def get_previous_books(self) -> list:
+        return self._get_previous('book')
+
+    def get_previous_genres(self) -> list:
+        return self._get_previous('genre')
+
+    def get_previous_locations(self) -> list:
+        return self._get_previous('location')
+
+    def get_previous_recommendations(self) -> list:
+        return self._get_previous('recommendation')
+
+    def get_previous_moods(self) -> list:
+        return self._get_previous('mood')
+
     def __del__(self):
         self.save_knowledge('knowledge.json')
