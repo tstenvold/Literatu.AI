@@ -1,6 +1,6 @@
 import json
-from pathlib import Path
 import random
+import os
 import string
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 
@@ -31,6 +31,10 @@ class chatbot:
             self.load_knowledge(knowledge_json)
 
         self.update_responses()
+        # Print all the loaded variables
+        print(f"genre: {self.genre}")
+        print(f"author: {self.author}")
+        print(f"book: {self.book}")
 
     def update_responses(self) -> None:
         self.responses = {
@@ -67,8 +71,11 @@ class chatbot:
         return res
 
     def user_response(self, text) -> bool:
-        questions = {'genre': 'What is the genre mentioned?',
-                     'author': 'Who is the book author mentioned?', 'book': 'What is the book mentioned?'}
+        questions = {
+            'genre': 'What is the genre mentioned?',
+            'author': 'Who is the book author mentioned?',
+            'book': 'What is the book mentioned?'
+        }
         print(f'last state: {self.last_state}')
         print(f'state: {self.state}')
         if self.last_state not in questions.keys():
@@ -123,16 +130,17 @@ class chatbot:
         return random.choice(self.responses[self.state])
 
     def load_knowledge(self, knowledge_json) -> None:
+        if not os.path.exists(knowledge_json):
+            self.save_knowledge(knowledge_json)
+
         with open(knowledge_json) as f:
             self.knowledge = json.load(f)
 
         for id, knowledge in self.knowledge.items():
-            if self.genre == None:
-                self.genre = knowledge['genre']
-            if self.author == None:
-                self.author = knowledge['author']
-            if self.book == None:
-                self.book = knowledge['book']
+
+            self.genre = knowledge['genre']
+            self.author = knowledge['author']
+            self.book = knowledge['book']
 
             self.last_book = knowledge['recommendation']
 
