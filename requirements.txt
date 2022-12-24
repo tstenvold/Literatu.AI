@@ -7,4 +7,4 @@ nltk
 speechrecognition
 pyaudio
 geocoder
-chatbotAI
+transformers
