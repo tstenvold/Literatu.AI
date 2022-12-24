@@ -6,6 +6,7 @@ import pyttsx3
 import time
 import threading
 import concurrent.futures
+import os
 from chatbot import chatbot
 
 
@@ -47,42 +48,54 @@ def main():
     recognizer = sr.Recognizer()
     face_event = threading.Event()
     face = {}
+    chat = chatbot("knowledge.json")
+    chat.set_location(get_location().city)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        loc_future = executor.submit(get_location)
-        # say_text("Welcome! to the Literature A I app.")
-        first_q = "Hi! How are you feeling today?"
-        cb = chatbot(previous_dialog=[f"{first_q}", ])
-        say_text(first_q)
-        city = loc_future.result().city
+        response = chat.get_response()
+        say_text(response)
 
         while True:
-            face_event.clear()
-            face_future = executor.submit(
-                emotion_face.stream_process_image, face_event)
+            if chat.state == 'mood':
+                response = chat.get_response()
+                say_text(response)
 
-            text = get_voice_input(recognizer)
-            face_event.set()
+                face_event.clear()
+                face_future = executor.submit(
+                    emotion_face.stream_process_image, face_event)
+                text = get_voice_input(recognizer)
+                face_event.set()
+                face = face_future.result()
 
-            face = face_future.result()
-            voice = emotion_text.process_text(text)
+                voice = emotion_text.process_text(text)
 
-            print(f"Voice: {voice}")
-            print(f"Face: {face}")
-            voice_emotion = emotion_text.get_top_emotion(voice)
-            face_emotion = emotion_face.get_top_emotion(face)
+                print(f"Voice: {voice}")
+                print(f"Face: {face}")
 
-            response = cb.generate_response("", text)
+                # combine voice and face emotion and return the top emotion
+                emotion = emotion_text.combine_emotions(voice, face)
+                print(f"Combined emotion: {emotion}")
+                chat.mood = emotion_text.get_top_emotion(emotion)
+                print(f"The emotion is {chat.mood}")
 
-            print(f"Voice Emotion: {voice_emotion}")
-            print(f"Face Emotion: {face_emotion}")
+            else:
+                text = get_voice_input(recognizer)
+
+            chat.user_response(text)
+            response = chat.get_response()
 
             print(f"You said: {text}")
             print(f"Bot says: {response}")
             say_text(response)
 
-            if text in ["quit", "exit", "bye", "cancel", "stop"]:
+            if chat.state == 'goodbye':
+                response = chat.get_response()
+                say_text(response)
                 break
+            elif chat.state == 'recommendation':
+                # TODO Generate recommendation here
+                chat.set_recommendation(
+                    "No Country For Old Men by Cormac McCarthy")
 
 
 if __name__ == "__main__":

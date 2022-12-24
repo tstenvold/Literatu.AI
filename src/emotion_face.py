@@ -17,7 +17,7 @@ def random_string(length: int) -> list:
 def get_image(cap):
 
     while True:
-        time.sleep(0.1)
+        time.sleep(0.2)
         _, frame = cap.read()
         if frame is not None and frame.any():
             return frame
@@ -66,8 +66,6 @@ def process_image(image_path: str) -> dict:
 
 def get_top_emotion(emotion_dict: dict) -> str:
     if emotion_dict == {}:
-        return "None"
-    elif emotion_dict["happy"] == emotion_dict["angry"] == emotion_dict["surprise"] == emotion_dict["sad"] == emotion_dict["fear"] == emotion_dict["neutral"] == emotion_dict["disgust"]:
         return "None"
     else:
         return max(emotion_dict, key=emotion_dict.get)
