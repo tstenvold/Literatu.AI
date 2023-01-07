@@ -4,6 +4,7 @@ import os
 import string
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 
+
 class chatbot:
 
     def __init__(self, knowledge_json=None) -> None:
@@ -51,7 +52,7 @@ class chatbot:
     def update_responses(self) -> None:
         self.responses = {
             'greeting': ['Hello', 'Hi', 'Welcome', 'Good day', ],
-            'confirm': ['OK', 'alright', 'I see', 'I get it'],
+            'confirm': ['OK', 'alright', 'I see', 'I get it', 'interesting', ],
             'mood': ['How are you?', 'How are you doing?', 'How are you feeling?', 'How are you today?'],
             'genre': ['What genre do you like?', 'What genre do you prefer?', 'What genre do you enjoy?', 'What genre do you read?'],
             'author': ['Who is your favorite author?', 'Which author do you like?', 'Name an author that you like'],
@@ -137,6 +138,7 @@ class chatbot:
             self.num_questions = 0
 
         self.state = random.choice(options)
+        self.num_questions -= 1
 
     def get_response(self, user_reaction: bool = False) -> str:
         self.last_state = self.state
@@ -173,9 +175,9 @@ class chatbot:
                 self.state = 'recommendation'
                 response += ", " + self.select_response()
                 self.state = 'summary'
+                response += ", " + self.select_response()
             else:
                 self.state = 'goodbye'
-            response += ", " + self.select_response()
 
         return response
 
