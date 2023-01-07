@@ -12,9 +12,14 @@ class chatbot:
     def __init__(self, knowledge_json=None) -> None:
         self.state = 'greeting'
         self.last_state = None
+        self.num_questions = 3
 
         self.nlp = pipeline('question-answering',
-                            model=model_name, tokenizer=model_name)
+                            model="deepset/roberta-base-squad2", tokenizer="deepset/roberta-base-squad2")
+        self.sentiment = pipeline(
+            "sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english", tokenizer="distilbert-base-uncased-finetuned-sst-2-english")
+        self.summarize = pipeline(
+            "summarization", model="sshleifer/distilbart-cnn-12-6", tokenizer="sshleifer/distilbart-cnn-12-6")
 
         self.mood = None
         self.genre = None
@@ -23,6 +28,7 @@ class chatbot:
         self.location = None
         self.last_book = None
         self.recommendation = None
+        self.recommendation_summary = None
 
         self.responses = {}
 
@@ -38,7 +44,7 @@ class chatbot:
 
     def update_responses(self) -> None:
         self.responses = {
-            'greeting': ['Hello', 'Hi', 'Welcome', 'Good day', 'Hey'],
+            'greeting': ['Hello', 'Hi', 'Welcome', 'Good day', ],
             'confirm': ['OK', 'alright', 'I see', 'I get it'],
             'mood': ['How are you?', 'How are you doing?', 'How are you feeling?', 'How are you today?'],
             'genre': ['What genre do you like?', 'What genre do you prefer?', 'What genre do you enjoy?', 'What genre do you read?'],
@@ -47,11 +53,15 @@ class chatbot:
             'location': [f'Would you like to read an author from {self.location}?', f'Would you like to read a book from {self.location}?'],
             'last_book': [f'Did you like the {self.last_book}?', f'Did you enjoy {self.last_book}?', f'Have you finished {self.last_book}?'],
             'recommendation': [f'I recommend you read {self.recommendation}', f'I think you should read {self.recommendation}', f'I suggest you look into {self.recommendation}', f'I think you would like {self.recommendation}'],
-            'goodbye': ['Goodbye', 'See you later', 'Bye', 'Have a nice day', 'Have a good day']
+            'goodbye': ['Goodbye', 'See you later', 'Bye', 'Have a nice day', 'Have a good day'],
+            'new_book': ['Would you like to read a different book?'],
+            'summary': ['Would you like to hear a summary?', 'Do you want to hear a brief summary of the book?', 'Would you like to hear a bit about the book?'],
         }
 
-    def set_recommendation(self, book) -> None:
+    def set_recommendation(self, book, summary) -> None:
         self.recommendation = book
+        self.recommendation_summary = self.summarize(summary, min_length=50)[
+            0]['summary_text']
         self.update_responses()
 
     def set_location(self, location) -> None:
@@ -70,7 +80,17 @@ class chatbot:
             return None
         return res
 
+    def get_summary(self) -> str:
+        return self.recommendation_summary
+
+    def positive_response(self, text: str) -> bool:
+        res = self.sentiment(text)[0]
+        if text != "" and res != None and res['label'] == 'POSITIVE':
+            return True
+        return False
+
     def user_response(self, text) -> bool:
+
         questions = {
             'genre': 'What is the genre mentioned?',
             'author': 'Who is the book author mentioned?',
@@ -100,16 +120,22 @@ class chatbot:
         options = ['genre', 'author', 'book', 'location']
         if self.genre != None:
             options.remove('genre')
+            self.num_questions -= 1
         if self.author != None:
             options.remove('author')
+            self.num_questions -= 1
         if self.book != None:
             options.remove('book')
+            self.num_questions -= 1
+        if len(options) == 1:
+            self.num_questions = 0
 
         self.state = random.choice(options)
 
     def get_response(self, user_reaction: bool = False) -> str:
         self.last_state = self.state
         response = self.select_response()
+
         if self.state == 'greeting':
             self.state = 'mood'
         elif self.state == 'mood':
@@ -120,11 +146,39 @@ class chatbot:
         elif self.state == 'last_book':
             self._choose_option()
         elif self.state in ['genre', 'author', 'book', 'location']:
-            self.state = 'recommendation'
+            if self.num_questions >= 0:
+                self._choose_option()
+            else:
+                self.state = 'recommendation'
         elif self.state == 'recommendation':
-            self.state = 'goodbye'
+            self.state = 'summary'
+            response += ", " + self.select_response()
+        elif self.state == 'summary':
+            self.last_state = self.state
+            response = self.acknowledge()
+            if user_reaction:
+                response += ", " + self.recommendation_summary
+            self.state = 'new_book'
+            response += ", " + self.select_response()
+        elif self.state == 'new_book':
+            self.last_state = self.state
+            response = self.acknowledge()
+            if user_reaction:
+                self.state = 'recommendation'
+                response += ", " + self.select_response()
+                self.state = 'summary'
+            else:
+                self.state = 'goodbye'
+            response += ", " + self.select_response()
 
         return response
+
+    def acknowledge(self) -> str:
+        tmp = self.state
+        self.state = 'confirm'
+        res = self.select_response()
+        self.state = tmp
+        return res
 
     def select_response(self) -> str:
         return random.choice(self.responses[self.state])
@@ -134,7 +188,11 @@ class chatbot:
             self.save_knowledge(knowledge_json)
 
         with open(knowledge_json) as f:
-            self.knowledge = json.load(f)
+            try:
+                self.knowledge = json.load(f)
+            except:
+                self.save_knowledge(knowledge_json)
+                self.knowledge = json.load(f)
 
         for id, knowledge in self.knowledge.items():
 

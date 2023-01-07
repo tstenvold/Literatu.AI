@@ -82,7 +82,9 @@ def main():
                 text = get_voice_input(recognizer)
 
             chat.user_response(text)
-            response = chat.get_response()
+            response = chat.get_response(
+                chat.positive_response(text)
+            )
 
             print(f"You said: {text}")
             print(f"Bot says: {response}")
@@ -95,7 +97,9 @@ def main():
             elif chat.state == 'recommendation':
                 # TODO Generate recommendation here
                 chat.set_recommendation(
-                    "No Country For Old Men by Cormac McCarthy")
+                    "No Country For Old Men by Cormac McCarthy",
+                    "In his blistering new novel, Cormac McCarthy returns to the Texas-Mexico border, the setting of his famed Border Trilogy. The time is our own, when rustlers have given way to drug-runners and small towns have become free-fire zones. One day, Llewellyn Moss finds a pickup truck surrounded by a bodyguard of dead men. A load of heroin and two million dollars in cash are still in the back. When Moss takes the money, he sets off a chain reaction of catastrophic violence that not even the law–in the person of aging, disillusioned Sheriff Bell–can contain. As Moss tries to evade his pursuers–in particular a mysterious mastermind who flips coins for human lives–McCarthy simultaneously strips down the American crime novel and broadens its concerns to encompass themes as ancient as the Bible and as bloodily contemporary as this morning’s headlines. No Country for Old Men is a triumph."
+                )
 
 
 if __name__ == "__main__":
