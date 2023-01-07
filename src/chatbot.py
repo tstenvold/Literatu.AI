@@ -4,9 +4,6 @@ import os
 import string
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 
-model_name = "deepset/roberta-base-squad2"
-
-
 class chatbot:
 
     def __init__(self, knowledge_json=None) -> None:
@@ -14,12 +11,21 @@ class chatbot:
         self.last_state = None
         self.num_questions = 3
 
-        self.nlp = pipeline('question-answering',
-                            model="deepset/roberta-base-squad2", tokenizer="deepset/roberta-base-squad2")
+        self.nlp = pipeline(
+            'question-answering',
+            model="deepset/roberta-base-squad2",
+            tokenizer="deepset/roberta-base-squad2"
+        )
         self.sentiment = pipeline(
-            "sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english", tokenizer="distilbert-base-uncased-finetuned-sst-2-english")
+            "sentiment-analysis",
+            model="distilbert-base-uncased-finetuned-sst-2-english",
+            tokenizer="distilbert-base-uncased-finetuned-sst-2-english"
+        )
         self.summarize = pipeline(
-            "summarization", model="sshleifer/distilbart-cnn-12-6", tokenizer="sshleifer/distilbart-cnn-12-6")
+            "summarization",
+            model="sshleifer/distilbart-cnn-12-6",
+            tokenizer="sshleifer/distilbart-cnn-12-6"
+        )
 
         self.mood = None
         self.genre = None
@@ -54,7 +60,7 @@ class chatbot:
             'last_book': [f'Did you like the {self.last_book}?', f'Did you enjoy {self.last_book}?', f'Have you finished {self.last_book}?'],
             'recommendation': [f'I recommend you read {self.recommendation}', f'I think you should read {self.recommendation}', f'I suggest you look into {self.recommendation}', f'I think you would like {self.recommendation}'],
             'goodbye': ['Goodbye', 'See you later', 'Bye', 'Have a nice day', 'Have a good day'],
-            'new_book': ['Would you like to read a different book?'],
+            'new_book': ['Would you like to read a different book?', 'Shall I recommend you different book?'],
             'summary': ['Would you like to hear a summary?', 'Do you want to hear a brief summary of the book?', 'Would you like to hear a bit about the book?'],
         }
 

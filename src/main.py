@@ -77,7 +77,7 @@ def main():
                 print(f"Combined emotion: {emotion}")
                 chat.mood = emotion_text.get_top_emotion(emotion)
                 print(f"The emotion is {chat.mood}")
-
+                 
             else:
                 text = get_voice_input(recognizer)
 
