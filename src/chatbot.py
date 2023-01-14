@@ -10,7 +10,7 @@ class chatbot:
     def __init__(self, knowledge_json=None) -> None:
         self.state = 'greeting'
         self.last_state = None
-        self.num_questions = 3
+        self.num_questions = 2
 
         self.nlp = pipeline(
             'question-answering',
@@ -34,6 +34,7 @@ class chatbot:
         self.book = None
         self.location = None
         self.last_book = None
+        self.rating = None
         self.recommendation = None
         self.recommendation_summary = None
 
@@ -58,10 +59,11 @@ class chatbot:
             'author': ['Who is your favorite author?', 'Which author do you like?', 'Name an author that you like'],
             'book': ['What is your favorite book?', 'Which book have you liked?', 'Name a book that you like'],
             'location': [f'Would you like to read an author from {self.location}?', f'Would you like to read a book from {self.location}?'],
-            'last_book': [f'Did you like the {self.last_book}?', f'Did you enjoy {self.last_book}?', f'Have you finished {self.last_book}?'],
+            'last_book': [f'Did you finish {self.last_book}?', f'Did you complete {self.last_book}?', f'Have you finished {self.last_book}?'],
+            'rating': ['How much did you like it?', 'How much did you enjoy it?', 'what did you think of it?'],
             'recommendation': [f'I recommend you read {self.recommendation}', f'I think you should read {self.recommendation}', f'I suggest you look into {self.recommendation}', f'I think you would like {self.recommendation}'],
             'goodbye': ['Goodbye', 'See you later', 'Bye', 'Have a nice day', 'Have a good day'],
-            'new_book': ['Would you like to read a different book?', 'Shall I recommend you different book?'],
+            'new_book': ['Would you like to read a different book?', 'Shall I recommend you a different book?'],
             'summary': ['Would you like to hear a summary?', 'Do you want to hear a brief summary of the book?', 'Would you like to hear a bit about the book?'],
         }
 
@@ -87,6 +89,14 @@ class chatbot:
             return None
         return res
 
+    def get_rating(self, text: str) -> int:
+        res = self.sentiment(text)[0]
+        if text != "" and res != None and res['label'] == 'POSITIVE':
+            return int(res['score'] * 100)
+        elif text != "" and res != None and res['label'] == 'NEGATIVE':
+            return 100 - int(res['score'] * 100)
+        return False
+
     def get_summary(self) -> str:
         return self.recommendation_summary
 
@@ -105,7 +115,11 @@ class chatbot:
         }
         print(f'last state: {self.last_state}')
         print(f'state: {self.state}')
-        if self.last_state not in questions.keys():
+        if self.last_state == 'rating':
+            self.rating = self.get_rating(text)
+            self.update_responses()
+            return True
+        elif self.last_state not in questions.keys():
             return False
 
         result = self.get_answer(text, questions[self.last_state])
@@ -152,6 +166,8 @@ class chatbot:
             else:
                 self._choose_option()
         elif self.state == 'last_book':
+            self.state = 'rating'
+        elif self.state == 'rating':
             self._choose_option()
         elif self.state in ['genre', 'author', 'book', 'location']:
             if self.num_questions >= 0:
@@ -221,6 +237,7 @@ class chatbot:
             'book': self.book,
             'location': self.location,
             'last_book': self.last_book,
+            'rating': self.rating,
             'recommendation': self.recommendation,
         }
         self.knowledge[id] = new_knowledge
