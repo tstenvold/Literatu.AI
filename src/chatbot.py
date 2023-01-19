@@ -2,7 +2,7 @@ import json
 import random
 import os
 import string
-from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+from transformers import pipeline
 
 
 class chatbot:

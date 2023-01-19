@@ -1,10 +1,7 @@
-pyttsx3
-fer
-opencv-python
-text2emotion
-emoji~=1.6.3
-nltk
-speechrecognition
-pyaudio
-geocoder
-transformers
+fer==22.4.0
+geocoder==1.38.1
+opencv_python==4.6.0.66
+pyttsx3==2.90
+SpeechRecognition==3.8.1
+text2emotion==0.0.5
+transformers==4.24.0

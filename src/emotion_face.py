@@ -1,11 +1,9 @@
 import random
-import concurrent.futures
 import string
 import threading
 from fer import FER
 from collections import Counter
 import time
-import os
 import cv2
 
 
