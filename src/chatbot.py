@@ -38,6 +38,7 @@ class chatbot:
         self.recommendation = None
         self.recommendation_summary = None
 
+        self.cancel_words = ["stop", "cancel", "quit", "exit", ]
         self.responses = {}
 
         self.knowledge = {}
@@ -60,7 +61,7 @@ class chatbot:
             'book': ['What is your favorite book?', 'Which book have you liked?', 'Name a book that you like'],
             'location': [f'Would you like to read an author from {self.location}?', f'Would you like to read a book from {self.location}?'],
             'last_book': [f'Did you finish {self.last_book}?', f'Did you complete {self.last_book}?', f'Have you finished {self.last_book}?'],
-            'rating': ['How much did you like it?', 'How much did you enjoy it?', 'what did you think of it?'],
+            'rating': ['How would you rate it from 0 to 10?', 'What would you rate it out of 10?', 'Please rate it from 0 to 10'],
             'recommendation': [f'I recommend you read {self.recommendation}', f'I think you should read {self.recommendation}', f'I suggest you look into {self.recommendation}', f'I think you would like {self.recommendation}'],
             'goodbye': ['Goodbye', 'See you later', 'Bye', 'Have a nice day', 'Have a good day'],
             'new_book': ['Would you like to read a different book?', 'Shall I recommend you a different book?'],
@@ -69,7 +70,7 @@ class chatbot:
 
     def set_recommendation(self, book, summary) -> None:
         self.recommendation = book
-        self.recommendation_summary = self.summarize(summary, min_length=50)[
+        self.recommendation_summary = self.summarize(summary, min_length=30)[
             0]['summary_text']
         self.update_responses()
 
@@ -78,6 +79,8 @@ class chatbot:
         self.update_responses()
 
     def get_answer(self, input, question) -> dict:
+        print(f"input: {input}")
+        print(f"question: {question}")
         if input == None or input == '':
             return None
         QA_input = {
@@ -85,6 +88,7 @@ class chatbot:
             'context': input
         }
         res = self.nlp(QA_input)
+        print(f"res: {res}")
         if res['score'] < 0.01:
             return None
         return res
@@ -111,18 +115,16 @@ class chatbot:
         questions = {
             'genre': 'What is the genre mentioned?',
             'author': 'Who is the book author mentioned?',
-            'book': 'What is the book mentioned?'
+            'book': 'What is the book mentioned?',
+            'rating': 'What is the rating mentioned?',
         }
         print(f'last state: {self.last_state}')
         print(f'state: {self.state}')
-        if self.last_state == 'rating':
-            self.rating = self.get_rating(text)
-            self.update_responses()
-            return True
-        elif self.last_state not in questions.keys():
+        if self.last_state not in questions.keys():
             return False
-
+        print("User response: ", text)
         result = self.get_answer(text, questions[self.last_state])
+        print(f"result: {result}")
         if result == None:
             return False
 
@@ -133,6 +135,8 @@ class chatbot:
             self.author = result['answer']
         elif self.last_state == 'book':
             self.book = result['answer']
+        elif self.last_state == 'rating':
+            self.rating = result['answer']
 
         self.update_responses()
         return True
@@ -191,7 +195,6 @@ class chatbot:
                 self.state = 'recommendation'
                 response += ", " + self.select_response()
                 self.state = 'summary'
-                response += ", " + self.select_response()
             else:
                 self.state = 'goodbye'
 

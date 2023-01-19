@@ -79,18 +79,28 @@ def main():
                 print(f"Combined emotion: {emotion}")
                 chat.mood = emotion_text.get_top_emotion(emotion)
                 print(f"The emotion is {chat.mood}")
-
-            elif chat.last_state != 'location':
+            elif chat.last_state == 'location':
+                text = get_voice_input(recognizer)
+                if chat.positive_response(text):
+                    print("TODO!! get recommendation on location")
+                    chat.set_recommendation(
+                        "The Magic Mountain by Thomas Mann",
+                        "In this dizzyingly rich novel of ideas, Mann uses a sanatorium in the Swiss Alps, a community devoted exclusively to sickness, as a microcosm for Europe, which in the years before 1914 was already exhibiting the first symptoms of its own terminal irrationality. The Magic Mountain is a monumental work of erudition and irony, sexual tension and intellectual ferment, a book that pulses with life in the midst of death."
+                    )
+                    chat.state = 'recommendation'
+            else:
                 text = get_voice_input(recognizer)
 
-            chat.user_response(text)
-            response = chat.get_response(
-                chat.positive_response(text)
-            )
-
-            print(f"You said: {text}")
-            print(f"Bot says: {response}")
-            say_text(response)
+            if text in chat.cancel_words:
+                chat.state = 'goodbye'
+            else:
+                chat.user_response(text)
+                response = chat.get_response(
+                    chat.positive_response(text)
+                )
+                print(f"You said: {text}")
+                print(f"Bot says: {response}")
+                say_text(response)
 
             if chat.state == 'goodbye':
                 response = chat.get_response()
@@ -103,15 +113,6 @@ def main():
                     "No Country For Old Men by Cormac McCarthy",
                     "In his blistering new novel, Cormac McCarthy returns to the Texas-Mexico border, the setting of his famed Border Trilogy. The time is our own, when rustlers have given way to drug-runners and small towns have become free-fire zones. One day, Llewellyn Moss finds a pickup truck surrounded by a bodyguard of dead men. A load of heroin and two million dollars in cash are still in the back. When Moss takes the money, he sets off a chain reaction of catastrophic violence that not even the law–in the person of aging, disillusioned Sheriff Bell–can contain. As Moss tries to evade his pursuers–in particular a mysterious mastermind who flips coins for human lives–McCarthy simultaneously strips down the American crime novel and broadens its concerns to encompass themes as ancient as the Bible and as bloodily contemporary as this morning’s headlines. No Country for Old Men is a triumph."
                 )
-            elif chat.last_state == 'location':
-                text = get_voice_input(recognizer)
-                if chat.positive_response(text):
-                    print("TODO!! get recommendation on location")
-                    chat.set_recommendation(
-                        "The Magic Mountain by Thomas Mann",
-                        "In this dizzyingly rich novel of ideas, Mann uses a sanatorium in the Swiss Alps, a community devoted exclusively to sickness, as a microcosm for Europe, which in the years before 1914 was already exhibiting the first symptoms of its own terminal irrationality. The Magic Mountain is a monumental work of erudition and irony, sexual tension and intellectual ferment, a book that pulses with life in the midst of death."
-                    )
-                    chat.state = 'recommendation'
 
 
 if __name__ == "__main__":
