@@ -254,6 +254,25 @@ class chatbot:
             previous.append(knowledge[key])
         return previous
 
+    def get_last_books(self) -> list:
+        books = self._get_previous('last_book')
+        ratings = self._get_previous('rating')
+        converted_ratings = []
+        values = ["zero", "one", "two", "three", "four",
+                  "five", "six", "seven", "eight", "nine", "ten"]
+        for i in ratings:
+            if i is None:
+                i = "-1"
+            if i in values:
+                converted_ratings.append(values.index(i))
+            else:
+                try:
+                    converted_ratings.append(int(i))
+                except ValueError:
+                    converted_ratings.append(-1)
+
+        return [(books[i], converted_ratings[i]) for i in range(0, len(books))]
+
     def get_previous_authors(self) -> list:
         return self._get_previous('author')
 
