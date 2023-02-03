@@ -54,6 +54,10 @@ def main():
     chat = chatbot("knowledge.json")
     chat.set_location(get_location().country)
     recommend = Recommender()
+    recommend.load_previous_recommendation(
+        chat.get_previous_recommendations(),
+        chat.get_previous_ratings()
+    )
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         response = chat.get_response()

@@ -288,6 +288,9 @@ class chatbot:
     def get_previous_recommendations(self) -> list:
         return self._get_previous('recommendation')
 
+    def get_previous_ratings(self) -> list:
+        return self._get_previous('rating')
+
     def get_previous_moods(self) -> list:
         return self._get_previous('mood')
 

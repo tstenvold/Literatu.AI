@@ -1,4 +1,3 @@
-from os import path
 import json
 import random
 
@@ -7,9 +6,14 @@ class Recommender:
 
     def __init__(self, file_path='random_sample_final_short.json'):
         self.books = []
+        self.previous_recommendation = None
 
         with open(file_path, 'r') as fp:
             self.books = json.load(fp)
+
+    def load_previous_recommendation(self, recommendation: list, rating: int):
+        # iterate and create tuple of recommendation and rating, store in previous_recommendation
+        self.previous_recommendation = zip(recommendation, rating)
 
     def get_location_books(self, location: str) -> list:
         return [book for book in self.books if location in book['country']]
