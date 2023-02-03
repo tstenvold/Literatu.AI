@@ -86,8 +86,8 @@ def main():
                 chat.mood = emotion_text.get_top_emotion(emotion)
                 print(f"The emotion is {chat.mood}")
             elif chat.last_state == 'location':
-                text = get_voice_input(recognizer)
-                if chat.positive_response(text):
+                location_text = get_voice_input(recognizer)
+                if chat.positive_response(location_text):
                     recommendation = recommend.get_location_recommendation(
                         chat.location)
                     chat.set_recommendation(

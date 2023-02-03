@@ -21,12 +21,12 @@ class Recommender:
                 self.books = [
                     book for book in self.books if book['title'] != title]
 
-    def get_location_books(self, location: str) -> list:
-        return [book for book in self.books if location in book['country']]
+    def get_location_candidates(self, location: str) -> list:
+        return [book for book in self.books if location in book['precise_country']]
 
     def get_location_recommendation(self, location: str) -> list:
         # Return a random book from the location
-        loc_books = self.get_location_books(location)
+        loc_books = self.get_location_candidates(location)
         return self.generate_recommendation(loc_books)
 
     def get_mood_books(self, mood: str) -> list:
