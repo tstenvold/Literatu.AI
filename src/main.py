@@ -8,13 +8,14 @@ import threading
 import concurrent.futures
 import os
 from chatbot import chatbot
+from recommender import Recommender
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 def get_location() -> str:
     g_loc = geocoder.ip('me')
-    print(f"Current city is {g_loc.city}")
+    print(f"Current city is {g_loc.country}")
     return g_loc
 
 
@@ -51,7 +52,8 @@ def main():
     face_event = threading.Event()
     face = {}
     chat = chatbot("knowledge.json")
-    chat.set_location(get_location().city)
+    chat.set_location(get_location().country)
+    recommend = Recommender()
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         response = chat.get_response()
@@ -82,10 +84,11 @@ def main():
             elif chat.last_state == 'location':
                 text = get_voice_input(recognizer)
                 if chat.positive_response(text):
-                    print("TODO!! get recommendation on location")
+                    recommendation = recommend.get_location_recommendation(
+                        chat.location)
                     chat.set_recommendation(
-                        "The Magic Mountain by Thomas Mann",
-                        "In this dizzyingly rich novel of ideas, Mann uses a sanatorium in the Swiss Alps, a community devoted exclusively to sickness, as a microcosm for Europe, which in the years before 1914 was already exhibiting the first symptoms of its own terminal irrationality. The Magic Mountain is a monumental work of erudition and irony, sexual tension and intellectual ferment, a book that pulses with life in the midst of death."
+                        recommendation['title'],
+                        recommendation['title'],
                     )
                     chat.state = 'recommendation'
             else:
@@ -108,9 +111,10 @@ def main():
                 print(f"Bot says: {response}")
                 break
             elif chat.state == 'recommendation':
-                # TODO Generate recommendation here
+                recommendation = recommend.get_current_mood_recommendation(
+                    chat.mood)
                 chat.set_recommendation(
-                    "No Country For Old Men by Cormac McCarthy",
+                    recommendation['title'],
                     "In his blistering new novel, Cormac McCarthy returns to the Texas-Mexico border, the setting of his famed Border Trilogy. The time is our own, when rustlers have given way to drug-runners and small towns have become free-fire zones. One day, Llewellyn Moss finds a pickup truck surrounded by a bodyguard of dead men. A load of heroin and two million dollars in cash are still in the back. When Moss takes the money, he sets off a chain reaction of catastrophic violence that not even the law–in the person of aging, disillusioned Sheriff Bell–can contain. As Moss tries to evade his pursuers–in particular a mysterious mastermind who flips coins for human lives–McCarthy simultaneously strips down the American crime novel and broadens its concerns to encompass themes as ancient as the Bible and as bloodily contemporary as this morning’s headlines. No Country for Old Men is a triumph."
                 )
 
