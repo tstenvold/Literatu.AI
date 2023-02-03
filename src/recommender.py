@@ -12,8 +12,14 @@ class Recommender:
             self.books = json.load(fp)
 
     def load_previous_recommendation(self, recommendation: list, rating: int):
-        # iterate and create tuple of recommendation and rating, store in previous_recommendation
         self.previous_recommendation = zip(recommendation, rating)
+        self.remove_previous_recommendation()
+
+    def remove_previous_recommendation(self):
+        for (title, _) in self.previous_recommendation:
+            if title is not None:
+                self.books = [
+                    book for book in self.books if book['title'] != title]
 
     def get_location_books(self, location: str) -> list:
         return [book for book in self.books if location in book['country']]
