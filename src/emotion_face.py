@@ -12,13 +12,14 @@ def random_string(length: int) -> list:
     return ''.join(random.choice(letters) for i in range(length))
 
 
-def get_image(cap):
-
-    while True:
-        time.sleep(0.2)
-        _, frame = cap.read()
-        if frame is not None and frame.any():
-            return frame
+def get_image(cap, count: int = 0):
+    _, frame = cap.read()
+    if frame is not None and frame.any():
+        return frame
+    elif count >= 5:
+        return None
+    else:
+        return get_image(cap, count + 1)
 
 
 def process_frame(frame) -> dict:

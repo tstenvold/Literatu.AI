@@ -2,6 +2,7 @@ import json
 import random
 import os
 import string
+import pycountry
 from transformers import pipeline
 
 
@@ -37,6 +38,7 @@ class chatbot:
         self.rating = None
         self.recommendation = None
         self.recommendation_summary = None
+        self.rec = None
 
         self.cancel_words = ["stop", "cancel", "quit", "exit", ]
         self.responses = {}
@@ -59,7 +61,7 @@ class chatbot:
             'genre': ['What genre do you like?', 'What genre do you prefer?', 'What genre do you enjoy?', 'What genre do you read?'],
             'author': ['Who is your favorite author?', 'Which author do you like?', 'Name an author that you like'],
             'book': ['What is your favorite book?', 'Which book have you liked?', 'Name a book that you like'],
-            'location': [f'Would you like to read an author from {self.location}?', f'Would you like to read a book from {self.location}?'],
+            'location': [f'Would you like to read a book from {self.get_country_name()}?', f'Would you like to read a {self.get_country_name()} book?'],
             'last_book': [f'Did you finish {self.last_book}?', f'Did you complete {self.last_book}?', f'Have you finished {self.last_book}?'],
             'rating': ['How would you rate it from 0 to 10?', 'What would you rate it out of 10?', 'Please rate it from 0 to 10'],
             'recommendation': [f'I recommend you read {self.recommendation}', f'I think you should read {self.recommendation}', f'I suggest you look into {self.recommendation}', f'I think you would like {self.recommendation}'],
@@ -70,13 +72,18 @@ class chatbot:
 
     def set_recommendation(self, book, summary) -> None:
         self.recommendation = book
-        self.recommendation_summary = self.summarize(summary, min_length=30)[
+        self.recommendation_summary = self.summarize(summary, min_length=20)[
             0]['summary_text']
         self.update_responses()
 
     def set_location(self, location) -> None:
         self.location = location
         self.update_responses()
+
+    def get_country_name(self) -> str:
+        if self.location == None:
+            return None
+        return pycountry.countries.get(alpha_2=self.location).name
 
     def get_answer(self, input, question) -> dict:
         print(f"input: {input}")
@@ -89,7 +96,7 @@ class chatbot:
         }
         res = self.nlp(QA_input)
         print(f"res: {res}")
-        if res['score'] < 0.01:
+        if res['score'] < 0.001:
             return None
         return res
 
@@ -114,8 +121,8 @@ class chatbot:
 
         questions = {
             'genre': 'What is the genre mentioned?',
-            'author': 'Who is the book author mentioned?',
-            'book': 'What is the book mentioned?',
+            'author': 'Who is the author mentioned?',
+            'book': 'What is the name of the book mentioned?',
             'rating': 'What is the rating mentioned?',
         }
         print(f'last state: {self.last_state}')
@@ -128,13 +135,21 @@ class chatbot:
         if result == None:
             return False
 
-        print(f"result: {result}")
         if self.last_state == 'genre':
             self.genre = result['answer']
         elif self.last_state == 'author':
-            self.author = result['answer']
+            author = self.rec.extract_first_author(
+                self.rec.lookup_author(result['answer']))
+            if author != None:
+                self.author = author
+            else:
+                self.author = result['answer']
         elif self.last_state == 'book':
-            self.book = result['answer']
+            book = self.rec.lookup_book_by_title(result['answer'])
+            if book != None:
+                self.book = book['title']
+            else:
+                self.book = result['answer']
         elif self.last_state == 'rating':
             self.rating = result['answer']
 
@@ -192,9 +207,15 @@ class chatbot:
             self.last_state = self.state
             response = self.acknowledge()
             if user_reaction:
+                recom = self.rec.get_current_mood_recommendation(self.mood)
+                self.set_recommendation(
+                    recom['title'],
+                    recom['description']
+                )
                 self.state = 'recommendation'
                 response += ", " + self.select_response()
                 self.state = 'summary'
+                response += ", " + self.select_response()
             else:
                 self.state = 'goodbye'
 
