@@ -66,7 +66,7 @@ def location_recommendation(chat, recommend):
     )
 
 
-def handle_states(chat, recommend, text="") -> bool:
+def handle_states(chat, recognizer, recommend, text="") -> bool:
     if text in chat.cancel_words:
         chat.state = 'goodbye'
     else:
@@ -83,6 +83,12 @@ def handle_states(chat, recommend, text="") -> bool:
         say_text(response)
         print(f"Bot says: {response}")
         return True
+    elif chat.last_state == 'location':
+        location_text = get_voice_input(recognizer)
+        if chat.positive_response(location_text):
+            location_recommendation(chat, recommend)
+        else:
+            mood_recommendation(chat, recommend)
     elif chat.state == 'recommendation':
         mood_recommendation(chat, recommend)
 
@@ -136,13 +142,11 @@ def main():
             if chat.state == 'mood':
                 get_emotion(chat, executor, recognizer)
             elif chat.last_state == 'location':
-                location_text = get_voice_input(recognizer)
-                if chat.positive_response(location_text):
-                    location_recommendation(chat, recommend)
+                pass
             else:
                 text = get_voice_input(recognizer)
 
-            if handle_states(chat, recommend, text):
+            if handle_states(chat, recognizer, recommend, text):
                 break
 
 

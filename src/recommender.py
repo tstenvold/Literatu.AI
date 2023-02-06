@@ -85,12 +85,14 @@ class Recommender:
         return sorted(new, key=lambda book: book['average_rating'], reverse=True)[:20]
 
     def get_similar_books(self, ref: list) -> list:
-        return [book for book in self.books if ref['title'] != book['title'] and len(set(book['similar_books']).intersection(set(ref['similar_books']))) >= 2]
+        return [book for book in self.books if ref['title'] != book['title'] and len(set(book['similar_books']).intersection(set(ref['similar_books']))) >= 1]
 
     def generate_random_recommendation_from_candidates(self, candidates: list) -> list:
         if len(candidates) == 0:
             return None
         x = random.randint(0, len(candidates)-1)
+        print(candidates[x]['title'], candidates[x]['average_rating'], candidates[x]
+              ['emotion'], candidates[x]['publication_year'], candidates[x]['precise_country'])
         return candidates[x]
 
     def get_current_mood_recommendation(self, user_mood: str) -> list:
@@ -103,7 +105,7 @@ class Recommender:
         else:
             moods = ['happy', 'neutral']
 
-        if len(self.previous_recommendation) >= 2:
+        if len(self.previous_recommendation) >= 3:
             prev_can = self.get_candidates_from_previous()
             if len(prev_can) > 0:
                 mood_candidates = self.get_moods_candidates(moods)
@@ -114,7 +116,7 @@ class Recommender:
 
         candidates = self.get_new_top_rated_candidates(
             self.get_moods_candidates(moods))
-        return self.generate_random_recommendation_from_candidates(candidates)
+        return self.generate_random_recommendation_from_candidates(candidates[:5])
 
 
 if __name__ == '__main__':

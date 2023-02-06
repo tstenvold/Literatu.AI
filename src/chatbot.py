@@ -151,7 +151,12 @@ class chatbot:
             else:
                 self.book = result['answer']
         elif self.last_state == 'rating':
-            self.rating = result['answer']
+            values = ["zero", "one", "two", "three", "four",
+                      "five", "six", "seven", "eight", "nine", "ten"]
+            if result['answer'] in values:
+                self.rating = values.index(result['answer'])
+            else:
+                self.rating = result['answer']
 
         self.update_responses()
         return True
@@ -187,7 +192,18 @@ class chatbot:
         elif self.state == 'last_book':
             self.state = 'rating'
         elif self.state == 'rating':
-            self._choose_option()
+            if not user_reaction:
+                recom = self.rec.lookup_book_by_title(self.last_book)
+                self.set_recommendation(
+                    recom['title'],
+                    recom['description']
+                )
+                response = self.acknowledge()
+                self.state = 'new_book'
+                self.last_state = 'summary'
+                response += ", " + self.select_response()
+            else:
+                self._choose_option()
         elif self.state in ['genre', 'author', 'book', 'location']:
             if self.num_questions >= 0:
                 self._choose_option()
@@ -197,14 +213,12 @@ class chatbot:
             self.state = 'summary'
             response += ", " + self.select_response()
         elif self.state == 'summary':
-            self.last_state = self.state
             response = self.acknowledge()
             if user_reaction:
                 response += ", " + self.recommendation_summary
             self.state = 'new_book'
             response += ", " + self.select_response()
         elif self.state == 'new_book':
-            self.last_state = self.state
             response = self.acknowledge()
             if user_reaction:
                 recom = self.rec.get_current_mood_recommendation(self.mood)
@@ -242,7 +256,7 @@ class chatbot:
                 self.save_knowledge(knowledge_json)
                 self.knowledge = json.load(f)
 
-        for id, knowledge in self.knowledge.items():
+        for _, knowledge in self.knowledge.items():
 
             self.genre = knowledge['genre']
             self.author = knowledge['author']
