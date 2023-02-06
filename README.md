@@ -6,6 +6,9 @@ WS22/23 IUI Group 1 - Recommender for books &amp; literature
 * NLP
 * Facial Mood Recognition 
 
+## How to use
+Run ``python main.py`` from the ``src`` directory
+
 # Contributors
 - Magda Gunka - 
 - David Neubauer -
