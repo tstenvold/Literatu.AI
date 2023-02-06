@@ -1,6 +1,8 @@
 import json
+import math
 import random
 from fuzzywuzzy import fuzz
+import numpy
 
 
 class Recommender:
@@ -13,8 +15,7 @@ class Recommender:
             self.books = json.load(fp)
 
     def load_previous_recommendation(self, recommendation: list, rating: int):
-        self.previous_recommendation = zip(recommendation, rating)
-        self.remove_previous_recommendation()
+        self.previous_recommendation = list(zip(recommendation, rating))
 
     def remove_previous_recommendation(self):
         for (title, _) in self.previous_recommendation:
@@ -26,8 +27,9 @@ class Recommender:
         return [book for book in self.books if location in book['precise_country']]
 
     def get_location_recommendation(self, location: str) -> list:
-        loc_books = self.get_location_candidates(location)
-        return self.generate_recommendation(loc_books)
+        loc_books = self.get_new_top_rated_candidates(
+            self.get_location_candidates(location))
+        return self.generate_random_recommendation_from_candidates(loc_books)
 
     def get_mood_books(self, mood: str) -> list:
         return [book for book in self.books if mood == book['emotion']]
@@ -60,19 +62,32 @@ class Recommender:
         else:
             return a_book
 
-    def get_candidates_from_previous(self, candidates: list) -> list:
+    def get_candidates_from_previous(self) -> list:
         candidates = []
         for (title, rating) in self.previous_recommendation:
             if title is not None:
                 ref = self.lookup_book_by_title(title)
-                candidates.extend(self.get_similar_books(ref))
+                if rating is None:
+                    rating = 5
+                ref['distance_rating'] = numpy.linalg.norm(
+                    float(ref['average_rating'])-(int(rating)/2))
+                similar_books = [book.update(
+                    {'distance_rating': ref['distance_rating']}) or book for book in self.get_similar_books(ref)]
+                candidates.extend(similar_books)
 
-        return candidates
+        return sorted(candidates, key=lambda book: book['distance_rating'])
+
+    def get_new_top_rated_candidates(self, books: list) -> list:
+        new = [book for book in books if book['publication_year']
+               is not None and book['similar_books'] != []]
+        new = sorted(
+            new, key=lambda book: book['publication_year'], reverse=True)[:100]
+        return sorted(new, key=lambda book: book['average_rating'], reverse=True)[:20]
 
     def get_similar_books(self, ref: list) -> list:
         return [book for book in self.books if ref['title'] != book['title'] and len(set(book['similar_books']).intersection(set(ref['similar_books']))) >= 2]
 
-    def generate_recommendation(self, candidates: list) -> list:
+    def generate_random_recommendation_from_candidates(self, candidates: list) -> list:
         if len(candidates) == 0:
             return None
         x = random.randint(0, len(candidates)-1)
@@ -88,8 +103,18 @@ class Recommender:
         else:
             moods = ['happy', 'neutral']
 
-        candidates = self.get_moods_candidates(moods)
-        return self.generate_recommendation(candidates)
+        if len(self.previous_recommendation) >= 2:
+            prev_can = self.get_candidates_from_previous()
+            if len(prev_can) > 0:
+                mood_candidates = self.get_moods_candidates(moods)
+                candidates = [
+                    book for book in prev_can if book['title'] in [b['title'] for b in mood_candidates]]
+                if len(candidates) > 0:
+                    return self.generate_random_recommendation_from_candidates(candidates[:5])
+
+        candidates = self.get_new_top_rated_candidates(
+            self.get_moods_candidates(moods))
+        return self.generate_random_recommendation_from_candidates(candidates)
 
 
 if __name__ == '__main__':
@@ -103,3 +128,25 @@ if __name__ == '__main__':
     print(title['title'])
     author = rec.lookup_author('Dan brown')
     print(rec.extract_first_author(author))
+    popular = rec.get_new_top_rated_candidates(rec.books)
+    rec_pop = rec.generate_random_recommendation_from_candidates(popular)
+    print(rec_pop['title'])
+    similar2 = rec.get_similar_books(rec_pop)
+    for book in similar2:
+        print("\t ", book['title'])
+    loc = rec.get_location_recommendation('DE')
+    print(loc['title'])
+
+    from chatbot import chatbot
+    chat = chatbot("knowledge.json")
+    rec.load_previous_recommendation(
+        chat.get_previous_recommendations(),
+        chat.get_previous_ratings()
+    )
+    chat.rec = rec
+
+    prev_can = rec.get_candidates_from_previous()
+    for book in prev_can:
+        print(book['title'], book['distance_rating'], book['emotion'])
+    book = rec.get_current_mood_recommendation('angry')
+    print("Recommended book: ", book['title'])
