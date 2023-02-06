@@ -85,9 +85,12 @@ class Recommender:
         return sorted(new, key=lambda book: book['average_rating'], reverse=True)[:20]
 
     def get_similar_books(self, ref: list) -> list:
-        return [book for book in self.books if ref['title'] != book['title'] and len(set(book['similar_books']).intersection(set(ref['similar_books']))) >= 1]
+        return [book for book in self.books if ref['title'] != book['title'] and len(set(book['similar_books']).intersection(set(ref['similar_books']))) >= 2]
 
     def generate_random_recommendation_from_candidates(self, candidates: list) -> list:
+        if candidates is not None and self.previous_recommendation is not None:
+            candidates = [book for book in candidates if book['title'] not in [
+                title for (title, _) in self.previous_recommendation]]
         if len(candidates) == 0:
             return None
         x = random.randint(0, len(candidates)-1)
@@ -105,7 +108,7 @@ class Recommender:
         else:
             moods = ['happy', 'neutral']
 
-        if len(self.previous_recommendation) >= 3:
+        if self.previous_recommendation is not None and len(self.previous_recommendation) >= 3:
             prev_can = self.get_candidates_from_previous()
             if len(prev_can) > 0:
                 mood_candidates = self.get_moods_candidates(moods)
@@ -120,6 +123,7 @@ class Recommender:
 
 
 if __name__ == '__main__':
+    # Example usage of the Recommender class
     rec = Recommender()
     book = rec.get_current_mood_recommendation('happy')
     print(book['title'])
@@ -150,5 +154,5 @@ if __name__ == '__main__':
     prev_can = rec.get_candidates_from_previous()
     for book in prev_can:
         print(book['title'], book['distance_rating'], book['emotion'])
-    book = rec.get_current_mood_recommendation('angry')
+    book = rec.get_current_mood_recommendation('happy')
     print("Recommended book: ", book['title'])
